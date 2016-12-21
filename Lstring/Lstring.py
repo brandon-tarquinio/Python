@@ -6,18 +6,6 @@ class LString:
             self.next = nextPtr
             self.char = charVal
 
-        def getNext(self):
-            return self.next
-
-        def getChar(self):
-            return self.char
-
-        def setNext(self, nextPtr):
-            self.next = nextPtr
-
-        def setChar(self, char):
-            self.char = char
-
     def __init__(self, initString=""):
         self.first = None
         self.length = 0
@@ -31,7 +19,7 @@ class LString:
             self.last = self.first
         else:
             nextNode = self.LStringNode(None, char)
-            self.last.setNext(nextNode)
+            self.last.next = nextNode
             self.last = nextNode
         self.length += 1
 
@@ -42,58 +30,119 @@ class LString:
             i = 1
             nextNode = self.first
             while i != index:
-                nextNode = nextNode.getNext() 
+                nextNode = nextNode.next
                 i += 1
             return nextNode
 
+    def _isValidIndex(self, index):
+        return (index > 0 and index < self.length)
+
     def getCharAt(self, index):
-        #if index > self.length or index < 0:
-        if index > 0 and index < self.length: 
-            return self._getNodeAt(index).getChar()
+        if self._isValidIndex(index):
+            return self._getNodeAt(index).char
         else:
             print("Index out of bounds")
 
     def setCharAt(self, index, char):
-        if index > 0 and index < self.length: 
-            self._getNodeAt(index).setChar(char)     
+        if self._isValidIndex(index):
+            self._getNodeAt(index).char = char    
         else: 
             print("Index out of bounds")
 
+    def subStr(self, start, end):
+        nextNode = self._getNodeAt(start)
+        if nextNode is None:
+            print("Invalid start index for substring")
+
+        if end < self.length:
+            print("Invalid end index for substring") 
+
+        retStr = ""
+        for i in range(start, end):
+            retStr += nextNode.char
+            nextNode = nextNode.next
+        
+        return retStr
+
+
+    def __iter__(self):
+        self.tempNext = self.first
+        return self 
+
+    def __next__(self):
+        if self.tempNext is None:
+            raise StopIteration
+
+        retChar  = self.tempNext.char
+        self.tempNext = self.tempNext.next
+        return retChar 
+
     def __add__(self, other):
         newLstring = LString()
-        newLstring.first = self.first
-        newLstring.last = self.last
+
+        for char in self:
+            newLstring.addChar(char)
+
+        for char in other:
+            newLstring.addChar(char)
+
         return newLstring
 
+    # add in this case is symetric so this is not needed
+    # I might want to use this for concatenation with a str
     def __radd__(self, other):
-        print("Im here") 
+        newLstring = LString()
+
+        for char in other:
+            newLstring.addChar(char)
+
+        for char in self:
+            newLstring.addChar(char)
+
+        return newLstring
 
     def __str__(self):
         retString = ""
 
         nextNode = self.first
         while nextNode is not None:
-            retString += nextNode.getChar()
-            nextNode = nextNode.getNext()
+            retString += nextNode.char
+            nextNode = nextNode.next
         
         return retString
 
     def __len__(self):
         return self.length
 
+def printAssert(testVal, actualVal): 
+    print("The following should be \"" + str(testVal) + "\" : \"" + str(actualVal) + "\"")
 
-testLstring = LString("Here is a string")
-print(len(testLstring))
-print(testLstring)
+testStr = "Here is a string"
+testLstring = LString(testStr)
+
+printAssert(len(testStr), len(testLstring))
+printAssert(testStr, testLstring)
+print()
+
+#Test getCharAt
+printAssert("e", testLstring.getCharAt(2))
+printAssert("None", testLstring.getCharAt(len(testLstring)))
+printAssert("None", testLstring.getCharAt(0))
+print()
 
 #Test add
-newLstring = testLstring + LString("blah")
+testStr2 = " and another string "
+newLstring = testLstring + LString(testStr2)
+newLstring2 = LString(testStr2) + testLstring 
+printAssert(testStr + testStr2, newLstring) 
+printAssert(testStr2 + testStr, newLstring2) 
+print()
+
+#Test substring
+printAssert(testStr[1:3], testLstring.subStr(1,3)) 
+
 print(newLstring.getCharAt(2))
 testLstring.setCharAt(3, "e")
 print(testLstring)
 print(newLstring.getCharAt(2))
 
-#Test getCharAt
-print(testLstring.getCharAt(2))
-print(testLstring.getCharAt(len(testLstring)))
-print(testLstring.getCharAt(0))
